@@ -1,25 +1,34 @@
 const express = require('express');
 const sqlite3 = require('sqlite3');
+const bodyParser = require('body-parser');
+const formdata = require('form-data');
+const cors = require('cors');
+
 const app = express();
+const db = new sqlite3.Database('temp2.db');
 
-// Connect to the SQLite database
-const db = new sqlite3.Database('temp.db');
+app.use(cors()); 
+app.use(bodyParser.json());
 
+app.post('/execute-sql', (req, res) => {
+  console.log(req.body.data);
+  const { query } = req.body;
 
-// Middleware to parse JSON data
-app.use(express.json());
+  if (!query) {
+    return res.status(400).json({ error: 'SQL query is required.' });
+  }
 
-// Define your routes and handle database operations
-app.get('/users', (req, res) => {
-  db.all('SELECT * FROM PlaylistTrack', (err, rows) => {
+  db.all(query, (err, rows) => {
     if (err) {
+        console.log(err);
       return res.status(500).json({ error: 'Database error' });
     }
-    res.json(rows);
+    console.log(rows);
+    res.json({ result: rows });
   });
 });
 
-// Start the Express server
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
